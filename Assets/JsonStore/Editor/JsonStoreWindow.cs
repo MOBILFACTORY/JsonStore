@@ -21,6 +21,7 @@ public class JsonStoreWindow : EditorWindow
     private List<string> multiSelectedKey = new List<string>();
     private KeyCode pressedKeyCode;
     private bool isDuplicated = false;
+    private string searchStr = "";
     
     public void SetAsset(TextAsset asset)
     {
@@ -264,7 +265,16 @@ public class JsonStoreWindow : EditorWindow
 
         createCount = EditorGUILayout.IntField(createCount, GUILayout.Width(50));
 
-        GUILayout.Space(10);
+        GUILayout.Space(20);
+
+        GUILayout.Label("search string");
+        searchStr = GUILayout.TextField(searchStr, GUILayout.Width(100));
+        if (GUILayout.Button("x", EditorStyles.toolbarButton))
+        {
+            searchStr = "";
+        }
+
+        GUILayout.Space(20);
 
         if (GUILayout.Button("Open Data Fill Helper", EditorStyles.toolbarButton))
         {
@@ -293,15 +303,38 @@ public class JsonStoreWindow : EditorWindow
 
         listScrollPos = EditorGUILayout.BeginScrollView(listScrollPos, GUILayout.Width (120), GUILayout.Height(position.height - 20));
 
-        foreach (var pair in jsonDict)
+        var list = new List<string>();
+        if (searchStr != "")
         {
-            if (pair.Key == selectedKey)
+            foreach (var pair in jsonDict)
+            {
+                foreach (var p in pair.Value.AsDictonary)
+                {
+                    if (p.Value.Type == JsonObject.TYPE.STRING
+                             && p.Value.AsString.Value.IndexOf(searchStr) >= 0)
+                    {
+                        list.Add(pair.Key);
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            foreach (var pair in jsonDict) {
+                list.Add(pair.Key);
+            }
+        }
+
+        foreach (var key in list)
+        {
+            if (key == selectedKey)
                 GUI.contentColor = Color.green;
 
-            if (multiSelectedKey.Contains(pair.Key))
+            if (multiSelectedKey.Contains(key))
                 GUI.contentColor = Color.yellow;
 
-            if (GUILayout.Button(pair.Key))
+            if (GUILayout.Button(key))
             {
                 GUI.FocusControl("");
                 multiSelectedKey.Clear();
@@ -310,7 +343,7 @@ public class JsonStoreWindow : EditorWindow
                 {
                     var keys = GetJsonDictKeys();
                     var begin = keys.IndexOf(selectedKey);
-                    var end = keys.IndexOf(pair.Key);
+                    var end = keys.IndexOf(key);
                     if (begin < end)
                     {
                         begin += 1;
@@ -324,8 +357,8 @@ public class JsonStoreWindow : EditorWindow
                 }
                 else
                 {
-                    selectedKey = pair.Key;
-                    newKey = pair.Key;
+                    selectedKey = key;
+                    newKey = key;
                 }
             }
             GUI.contentColor = Color.white;

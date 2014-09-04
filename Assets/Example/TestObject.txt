@@ -1,1 +1,92 @@
-{"1":{"hp":1,"attackDamage":1,"speed":1,"sub":{"target":""}},"2":{"hp":2,"attackDamage":2,"speed":2,"sub":{"target":""}}}
+{
+    "1": {
+        "name": "test1",
+        "hp": 1,
+        "attackDamage": 1,
+        "speed": 1,
+        "sub": {
+            "target": ""
+        }
+    },
+    "2": {
+        "name": "test2",
+        "hp": 2,
+        "attackDamage": 2,
+        "speed": 2,
+        "sub": {
+            "target": ""
+        }
+    },
+    "3": {
+        "name": "test3",
+        "hp": 0,
+        "attackDamage": 0,
+        "speed": 0,
+        "sub": {
+            "target": ""
+        }
+    },
+    "4": {
+        "name": "test4",
+        "hp": 0,
+        "attackDamage": 0,
+        "speed": 0,
+        "sub": {
+            "target": ""
+        }
+    },
+    "5": {
+        "name": "test5",
+        "hp": 0,
+        "attackDamage": 0,
+        "speed": 0,
+        "sub": {
+            "target": ""
+        }
+    },
+    "6": {
+        "name": "a",
+        "hp": 0,
+        "attackDamage": 0,
+        "speed": 0,
+        "sub": {
+            "target": ""
+        }
+    },
+    "7": {
+        "name": "b",
+        "hp": 0,
+        "attackDamage": 0,
+        "speed": 0,
+        "sub": {
+            "target": ""
+        }
+    },
+    "8": {
+        "name": "c",
+        "hp": 0,
+        "attackDamage": 0,
+        "speed": 0,
+        "sub": {
+            "target": ""
+        }
+    },
+    "9": {
+        "name": "abc",
+        "hp": 0,
+        "attackDamage": 0,
+        "speed": 0,
+        "sub": {
+            "target": ""
+        }
+    },
+    "10": {
+        "name": "abcde",
+        "hp": 0,
+        "attackDamage": 0,
+        "speed": 0,
+        "sub": {
+            "target": ""
+        }
+    }
+}
