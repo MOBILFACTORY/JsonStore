@@ -1,6 +1,6 @@
 {
     "1": {
-        "name": "test1",
+        "name": "test",
         "hp": 1,
         "attackDamage": 1,
         "speed": 1,
@@ -9,7 +9,7 @@
         }
     },
     "2": {
-        "name": "test2",
+        "name": "test",
         "hp": 2,
         "attackDamage": 2,
         "speed": 2,
@@ -18,44 +18,44 @@
         }
     },
     "3": {
-        "name": "test3",
-        "hp": 0,
-        "attackDamage": 0,
-        "speed": 0,
+        "name": "test",
+        "hp": 3,
+        "attackDamage": 3,
+        "speed": 3,
         "sub": {
             "target": ""
         }
     },
     "4": {
-        "name": "test4",
-        "hp": 0,
-        "attackDamage": 0,
-        "speed": 0,
+        "name": "test",
+        "hp": 4,
+        "attackDamage": 4,
+        "speed": 4,
         "sub": {
             "target": ""
         }
     },
     "5": {
-        "name": "test5",
-        "hp": 0,
-        "attackDamage": 0,
-        "speed": 0,
+        "name": "test",
+        "hp": 5,
+        "attackDamage": 5,
+        "speed": 5,
         "sub": {
             "target": ""
         }
     },
     "6": {
-        "name": "a",
-        "hp": 0,
-        "attackDamage": 0,
-        "speed": 0,
+        "name": "test",
+        "hp": 6,
+        "attackDamage": 6,
+        "speed": 6,
         "sub": {
             "target": ""
         }
     },
     "7": {
-        "name": "b",
-        "hp": 0,
+        "name": "test",
+        "hp": 7,
         "attackDamage": 0,
         "speed": 0,
         "sub": {
@@ -63,8 +63,8 @@
         }
     },
     "8": {
-        "name": "c",
-        "hp": 0,
+        "name": "test",
+        "hp": 8,
         "attackDamage": 0,
         "speed": 0,
         "sub": {
@@ -72,8 +72,8 @@
         }
     },
     "9": {
-        "name": "abc",
-        "hp": 0,
+        "name": "test",
+        "hp": 9,
         "attackDamage": 0,
         "speed": 0,
         "sub": {
@@ -81,8 +81,8 @@
         }
     },
     "10": {
-        "name": "abcde",
-        "hp": 0,
+        "name": "test",
+        "hp": 10,
         "attackDamage": 0,
         "speed": 0,
         "sub": {

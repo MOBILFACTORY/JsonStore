@@ -11,10 +11,16 @@ public class JsonStore<T> : Dictionary<string, T> where T : ScriptableObject
 {
     public void Load(TextAsset json)
     {
-        var jsonDict = SolJSON.Convert.JsonConverter.ToJsonObject(json.text).AsDictonary;
+        var t = ScriptableObject.CreateInstance(typeof(T));
+        Load(json.name, json.text);
+    }
+
+    public void Load(string objName, string jsonStr)
+    {
+        var jsonDict = SolJSON.Convert.JsonConverter.ToJsonObject(jsonStr).AsDictonary;
         foreach (var pair in jsonDict)
         {
-            var o = (T)JsonStore.ToScriptableObject(json.name, pair.Value.AsDictonary);
+            var o = (T)JsonStore.ToScriptableObject(objName, pair.Value.AsDictonary);
             this.Add(pair.Key, o);
         }
     }

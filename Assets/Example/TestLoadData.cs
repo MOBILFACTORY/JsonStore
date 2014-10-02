@@ -2,12 +2,16 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class TestLoadData
+public class TestLoadData : MonoBehaviour
 {
     public JsonStore<TestObject> testObject = new JsonStore<TestObject>();
 
-    public void Load()
+    private void Start()
     {
-        testObject.Load(Resources.Load<TextAsset>("..."));
+        testObject.Load(Resources.Load<TextAsset>("TestObject"));
+
+        Debug.Log("Count: " + testObject.Count.ToString());
+        var t = testObject["1"];
+        Debug.Log(t.attackDamage);
     }
 }
