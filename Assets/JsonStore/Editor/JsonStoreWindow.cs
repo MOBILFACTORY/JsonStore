@@ -11,7 +11,7 @@ using System.IO;
 
 public class JsonStoreWindow : EditorWindow
 {
-    private const int ListWidth = 150;
+    private const int ListWidth = 250;
 
     private TextAsset _asset;
     private JsonDictonary _data;
@@ -313,38 +313,46 @@ public class JsonStoreWindow : EditorWindow
 
         _listScrollPos = EditorGUILayout.BeginScrollView(_listScrollPos, GUILayout.Width(ListWidth), GUILayout.Height(position.height - 20));
 
-        var list = new List<string>();
-        if (_searchStr != "")
-        {
-            foreach (var pair in _data)
+        var nameList = new List<string>();
+        var keyList = new List<string>();
+        foreach (var pair in _data) {
+            if (_searchStr != "")
             {
+                var find = false;
                 foreach (var p in pair.Value.AsDictonary)
                 {
                     if (p.Value.Type == JsonObject.TYPE.STRING
-                             && p.Value.AsString.Value.IndexOf(_searchStr) >= 0)
-                    {
-                        list.Add(pair.Key);
-                        break;
-                    }
+                        && p.Value.AsString.Value.IndexOf(_searchStr) >= 0)
+                        find = true;
                 }
+                if (!find)
+                    continue;
             }
-        }
-        else
-        {
-            foreach (var pair in _data) {
-                list.Add(pair.Key);
+            
+            if (pair.Value.AsDictonary.Contains("name"))
+            {
+                var namestr = pair.Value.AsDictonary["name"].ToString();
+                namestr = namestr.Replace("\"", "");
+                namestr = namestr.Replace("\\r", "");
+                nameList.Add(string.Format("{0} ({1})", pair.Key, namestr));
             }
+            else
+                nameList.Add(pair.Key);
+            
+            keyList.Add(pair.Key);
         }
 
-        foreach (var key in list)
+        int idx = -1;
+        foreach (var key in keyList)
         {
+            idx++;
             if (key == _selectedKey)
                 GUI.contentColor = Color.green;
 
             if (_multiSelectedKey.Contains(key))
                 GUI.contentColor = Color.yellow;
 
-            if (GUILayout.Button(key))
+            if (GUILayout.Button(nameList[idx]))
             {
                 GUI.FocusControl("");
                 _multiSelectedKey.Clear();
@@ -405,13 +413,15 @@ public class JsonStoreWindow : EditorWindow
             if (GUILayout.Button("Bottom"))
                 MoveToBottom();
         }
-
-        GUILayout.FlexibleSpace();
+        
+        GUILayout.Space(50);
 
         GUI.color = Color.red;
         if (GUILayout.Button("Delete"))
             Delete();
         GUI.color = Color.white;
+
+        GUILayout.FlexibleSpace();
 
         GUILayout.EndHorizontal();
 

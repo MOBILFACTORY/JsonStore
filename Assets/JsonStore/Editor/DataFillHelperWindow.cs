@@ -11,6 +11,8 @@ using System.IO;
 
 public class DataFillHelper : EditorWindow
 {
+    private readonly string KeyStr = "#Key";
+
     private TextAsset asset;
     private JsonDictonary jsonDict;
     private string text = "";
@@ -81,6 +83,17 @@ public class DataFillHelper : EditorWindow
         GUILayout.BeginVertical(GUILayout.Width(140));
         
         var obj = ScriptableObject.CreateInstance(asset.name);
+
+        if (KeyStr == selectedFieldName)
+            GUI.contentColor = Color.green;
+        if (GUILayout.Button(KeyStr))
+        {
+            selectedFieldName = KeyStr;
+            selectedPropName = "";
+        }
+        GUI.contentColor = Color.white;
+        GUILayout.Space(10);
+
         DrawFields(obj);
         
         GUILayout.EndVertical();
@@ -143,6 +156,17 @@ public class DataFillHelper : EditorWindow
                 var o = Activator.CreateInstance(f.FieldType);
                 DrawProps(o, f.Name, false);
             }
+            else if (type.IsEnum == true)
+            {
+                if (f.Name == selectedFieldName)
+                    GUI.contentColor = Color.green;
+                if (GUILayout.Button(f.Name))
+                {
+                    selectedFieldName = f.Name;
+                    selectedPropName = "";
+                }
+                GUI.contentColor = Color.white;
+            }
         }
     }
 
@@ -190,6 +214,40 @@ public class DataFillHelper : EditorWindow
     }
 
     private void Save()
+    {
+        if (selectedFieldName == KeyStr)
+        {
+            SaveKey();
+        }
+        else
+        {
+            SaveData();
+        }
+    }
+
+    private void SaveKey()
+    {
+        var keys = new List<string>();
+        foreach (var pair in jsonDict)
+        {
+            keys.Add(pair.Key);
+        }
+        
+        var valArr = text.Split('\n');
+        var valIdx = 0;
+        foreach (var key in keys)
+        {
+            if (valArr.Length == valIdx || valArr[valIdx] == "")
+                break;
+
+            var temp = jsonDict[key];
+            jsonDict[valArr[valIdx]] = temp;
+            jsonDict.Remove(key);
+            valIdx++;
+        }
+    }
+
+    private void SaveData()
     {
         var keys = new List<string>();
         foreach (var pair in jsonDict)
@@ -246,6 +304,10 @@ public class DataFillHelper : EditorWindow
                 var p = o.GetType().GetProperty(selectedPropName);
                 p.SetValue(o, Convert.ChangeType((object)valArr[valIdx], p.PropertyType), null);
                 jsonObj = JsonConverter.ToJsonObject(o);
+            }
+            else if (field.FieldType.IsEnum)
+            {
+                jsonObj = new JsonNumber(int.Parse(valArr[valIdx]));
             }
             
             jsonDict[key].AsDictonary[selectedFieldName] = jsonObj;
