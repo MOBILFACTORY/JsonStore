@@ -81,8 +81,9 @@ public class DataFillHelper : EditorWindow
         }
         
         GUILayout.BeginVertical(GUILayout.Width(140));
-        
-        var obj = ScriptableObject.CreateInstance(asset.name);
+
+        var origType = Activator.CreateInstance("Assembly-CSharp", asset.name).Unwrap().GetType();
+        var obj = JsonConverter.ToObject(origType, "{}");
 
         if (KeyStr == selectedFieldName)
             GUI.contentColor = Color.green;
@@ -227,23 +228,41 @@ public class DataFillHelper : EditorWindow
 
     private void SaveKey()
     {
-        var keys = new List<string>();
-        foreach (var pair in jsonDict)
+        var origDict = jsonDict;
+        var origKeys = new List<string>();
+        foreach (var pair in origDict)
         {
-            keys.Add(pair.Key);
+            origKeys.Add(pair.Key);
         }
-        
+
+        var newDict = new JsonDictonary();
         var valArr = text.Split('\n');
         var valIdx = 0;
-        foreach (var key in keys)
+        bool begin = false;
+        foreach (var key in origKeys)
         {
+            if (!begin)
+            {
+                if (key != selectedKey)
+                    continue;
+            }
+            
+            begin = true;
+
             if (valArr.Length == valIdx || valArr[valIdx] == "")
                 break;
 
-            var temp = jsonDict[key];
-            jsonDict[valArr[valIdx]] = temp;
-            jsonDict.Remove(key);
+            newDict[valArr[valIdx]] = origDict[key];
             valIdx++;
+        }
+
+        foreach (var key in origKeys)
+        {
+            jsonDict.Remove(key);
+        }
+        foreach (var pair in newDict)
+        {
+            jsonDict.Add(pair.Key, pair.Value);
         }
     }
 
@@ -270,8 +289,10 @@ public class DataFillHelper : EditorWindow
             
             if (valArr.Length == valIdx || valArr[valIdx] == "")
                 break;
+
             
-            var obj = ScriptableObject.CreateInstance(asset.name);
+            var origType = Activator.CreateInstance("Assembly-CSharp", asset.name).Unwrap().GetType();
+            var obj = JsonConverter.ToObject(origType, "{}");
             var field = obj.GetType().GetField(selectedFieldName);
             JsonObject jsonObj = new JsonString(valArr[valIdx], true);
             if (field.FieldType == typeof(int))
