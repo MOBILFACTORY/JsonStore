@@ -11,10 +11,16 @@ using System.IO;
 
 public class JsonStoreWindow : EditorWindow
 {
-    private const int ListWidth = 250;
+    static public TextAsset target;
+    static public TextAsset[] list;
 
-    private TextAsset _asset;
+    private readonly int ListWidth = 250;
+
     private JsonDictonary _data;
+    
+    private bool _useRefs = false;
+    private Dictionary<string, List<string>> _refers;
+    private Dictionary<string, List<string>> _refNames;
 
     private string _selectedKey = "";
     private string _newKey = "";
@@ -31,6 +37,17 @@ public class JsonStoreWindow : EditorWindow
 
     private string _searchStr = "";
 
+    public void OnEnable()
+    {
+        if (target == null)
+        {
+            Close();
+            return;
+        }
+        
+        Load();
+    }
+
     void OnGUI()
     {
         var e = Event.current;
@@ -38,7 +55,6 @@ public class JsonStoreWindow : EditorWindow
         {
             case EventType.keyDown:
                 _pressedKeyCode = e.keyCode;
-                SelectUpDown(e);
                 break;
             case EventType.keyUp:
                 _pressedKeyCode = KeyCode.None;
@@ -60,10 +76,32 @@ public class JsonStoreWindow : EditorWindow
         Repaint();
     }
     
-    public void Load(TextAsset asset)
+    public void Load()
     {
-        _asset = asset;
-        _data = JsonConverter.ToJsonObject(asset.text).AsDictonary;
+        _data = JsonConverter.ToJsonObject(target.text).AsDictonary;
+        _refers = new Dictionary<string, List<string>>();
+        _refNames = new Dictionary<string, List<string>>();
+        foreach (var i in JsonStoreWindow.list)
+        {
+            _refers[i.name] = new List<string>();
+            _refNames[i.name] = new List<string>();
+            var data = JsonConverter.ToJsonObject(i.text).AsDictonary;
+            foreach (var j in data)
+            {
+                _refers[i.name].Add(j.Key);
+
+                if (j.Value.AsDictonary != null
+                    && j.Value.AsDictonary.Contains("name"))
+                {
+                    var name = j.Value.AsDictonary["name"].AsString.Value;
+                    _refNames[i.name].Add(string.Format("({0})", name));
+                }
+                else
+                {
+                    _refNames[i.name].Add("()");
+                }
+            }
+        }
     }
 
     public void Create()
@@ -74,7 +112,8 @@ public class JsonStoreWindow : EditorWindow
         while (_data.Contains(key))
             key = (int.Parse(key) + 1).ToString();
 
-        _data.Add(key, JsonToJsonObject.Convert("{}"));
+        _data.Add(key, JsonConverter.ToJsonObject("{}"));
+
         _selectedKey = _newKey = key;
     }
 
@@ -93,7 +132,7 @@ public class JsonStoreWindow : EditorWindow
         }
 
         var copyStr = _data[_selectedKey].AsDictonary.ToString();
-        var copy = SolJSON.Convert.Helper.JsonToJsonObject.Convert(copyStr);
+        var copy = JsonConverter.ToJsonObject(copyStr);
         _data.Add(key, copy);
         _selectedKey = _newKey = key;
     }
@@ -121,7 +160,7 @@ public class JsonStoreWindow : EditorWindow
     {
         GUI.FocusControl("");
         
-        string assetpath = AssetDatabase.GetAssetPath(_asset);
+        string assetpath = AssetDatabase.GetAssetPath(target);
         string jsonstr = _data.ToString(4);
         StreamWriter file = new StreamWriter(assetpath);
         file.Write(jsonstr);
@@ -267,20 +306,10 @@ public class JsonStoreWindow : EditorWindow
     {
         GUILayout.BeginHorizontal(EditorStyles.toolbar, GUILayout.ExpandWidth(true));
 
-        GUILayout.Label("Count:");
-        _createCount = EditorGUILayout.IntField(_createCount, EditorStyles.toolbarTextField, GUILayout.Width(26));
-        if (GUILayout.Button("Create", EditorStyles.toolbarButton))
+        if (GUILayout.Button("Data Helper", EditorStyles.toolbarButton))
         {
-            for (int i = 0; i < _createCount; ++i)
-                Create();
-        }
-
-        GUILayout.Space(20);
-
-        if (GUILayout.Button("Open Data Fill Helper", EditorStyles.toolbarButton))
-        {
-            DataFillHelper win = EditorWindow.GetWindow<DataFillHelper>(_asset.name);
-            win.SetData(_asset, _data, _selectedKey);
+            var win = EditorWindow.GetWindow<DataFillHelper>(target.name);
+            win.SetData(target, _data, _selectedKey);
         }
 
         GUILayout.FlexibleSpace();
@@ -302,7 +331,7 @@ public class JsonStoreWindow : EditorWindow
 
     private void OnListGUI()
     {
-        if (_asset == null
+        if (target == null
             || _data == null)
         {
             Close();
@@ -329,7 +358,7 @@ public class JsonStoreWindow : EditorWindow
                     continue;
             }
             
-            if (pair.Value.AsDictonary.Contains("name"))
+            if (pair.Value.AsDictonary != null && pair.Value.AsDictonary.Contains("name"))
             {
                 var namestr = pair.Value.AsDictonary["name"].ToString();
                 namestr = namestr.Replace("\"", "");
@@ -382,6 +411,17 @@ public class JsonStoreWindow : EditorWindow
             GUI.contentColor = Color.white;
         }
 
+        GUILayout.Space(4);
+
+        GUILayout.BeginHorizontal();
+        _createCount = EditorGUILayout.IntField(_createCount, GUILayout.Width(40));
+        if (GUILayout.Button("+"))//string.Format("Create {0} Row", _createCount)))
+        {
+            for (int i = 0; i < _createCount; ++i)
+                Create();
+        }
+        GUILayout.EndHorizontal();
+
         EditorGUILayout.EndScrollView();
 
         GUILayout.EndVertical();
@@ -395,17 +435,15 @@ public class JsonStoreWindow : EditorWindow
         GUILayout.BeginVertical();
 
         GUILayout.BeginHorizontal();
+
         if (GUILayout.Button("Copy"))
             Copy();
-
         GUILayout.Space(10);
-
         GUILayout.Label("Move:");
         if (GUILayout.Button("Up"))
             Up();
         if (GUILayout.Button("Down"))
             Down();
-
         if (_multiSelectedKey.Count == 0)
         {
             if (GUILayout.Button("Top"))
@@ -413,21 +451,17 @@ public class JsonStoreWindow : EditorWindow
             if (GUILayout.Button("Bottom"))
                 MoveToBottom();
         }
-        
         GUILayout.Space(50);
-
         GUI.color = Color.red;
         if (GUILayout.Button("Delete"))
             Delete();
         GUI.color = Color.white;
-
         GUILayout.FlexibleSpace();
-
         GUILayout.EndHorizontal();
-
         GUILayout.Space(10);
 
         GUILayout.BeginHorizontal();
+
         GUILayout.Label("Key", GUILayout.Width(40));
         _newKey = GUILayout.TextField(_newKey, GUILayout.Width(100));
         if (_isDuplicated)
@@ -440,48 +474,170 @@ public class JsonStoreWindow : EditorWindow
         if (_selectedKey != _newKey)
         {
             ChangeKey();
-            GUILayout.EndHorizontal();
-            GUILayout.EndVertical();
-            return;
         }
+
         GUILayout.EndHorizontal();
 
         GUILayout.Space(10);
 
         _itemScrollPos = EditorGUILayout.BeginScrollView(_itemScrollPos, GUILayout.Width (position.width - ListWidth), GUILayout.Height(position.height - 70));
 
-        if (!_data.Contains(_selectedKey))
-            return;
-
-        var orig = _data[_selectedKey].AsDictonary;
-        var sobj = JsonStore.ToScriptableObject(_asset.name, orig);
-
-        EditorGUI.BeginChangeCheck();
-
-        var editor = Editor.CreateEditor(sobj);
-        if (editor != null)
-            editor.OnInspectorGUI();
-
-        if (EditorGUI.EndChangeCheck())
+        if (_data.Contains(_selectedKey) && _data[_selectedKey].AsDictonary != null)
         {
-            _data[_selectedKey] = JsonStore.ToJsonObject(sobj);
+            var origDict = _data[_selectedKey].AsDictonary;
+            var origType = Activator.CreateInstance("Assembly-CSharp", target.name).Unwrap().GetType();
+            var origObj = JsonConverter.ToObject(origType, origDict.ToString());
 
-            var dict = JsonStore.ToJsonObject(sobj).AsDictonary;
-            foreach (var pair in orig)
+            OnObjectGUI(origObj);
+
+            var newDict = JsonConverter.ToJsonObject(origObj).AsDictonary;
+            _data[_selectedKey] = newDict;
+
+            // 멀티 셀렉트 된 데이터들에 현재 데이터에서 수정된 값만 반영.
+            foreach (var dataKey in _multiSelectedKey)
             {
-                if (dict[pair.Key].ToString() != pair.Value.ToString())
+                foreach (var origPair in origDict)
                 {
-                    foreach (var key in _multiSelectedKey)
+                    if (origPair.Value.ToString() != newDict[origPair.Key].ToString())
                     {
-                        _data[key].AsDictonary[pair.Key] = dict[pair.Key];
+                        _data[dataKey].AsDictonary[origPair.Key] = newDict[origPair.Key];
                     }
                 }
+
+                //_data[dataKey].AsDictonary[changedKey] = changedValue;
             }
         }
 
         EditorGUILayout.EndScrollView();
-
         GUILayout.EndVertical();
+    }
+
+    private object OnObjectGUI(object obj)
+    {
+        if (obj == null)
+            return null;
+
+        var type = obj.GetType();
+
+        if (type == typeof(int))
+        {
+            obj = EditorGUILayout.IntField((int)obj);
+        }
+        else if (type == typeof(float))
+        {
+            obj = EditorGUILayout.FloatField((float)obj);
+        }
+        else if (type == typeof(string))
+        {
+            obj = EditorGUILayout.TextField((string)obj);
+        }
+        else
+        {
+            var fields = type.GetFields();
+            foreach (var field in fields)
+            {
+                GUILayout.BeginHorizontal();
+                OnFieldGUI(obj, field);
+                GUILayout.EndHorizontal();
+            }
+        }
+        return obj;
+    }
+
+    private void OnFieldGUI(object obj, FieldInfo field)
+    {
+        var labelWidth = GUILayout.Width(100);
+        GUILayout.Label(field.Name, labelWidth);
+        if (typeof(IList).IsAssignableFrom(field.FieldType))
+        {
+            IList ilist = (IList)field.GetValue(obj);
+            if (ilist == null)
+                ilist = (IList)Activator.CreateInstance(field.FieldType);
+            field.SetValue(obj, ilist);
+            
+            GUILayout.BeginVertical();
+            var count = EditorGUILayout.IntField("size", ilist.Count);
+            Type listType = ilist.GetType().GetGenericArguments()[0];
+            while (ilist.Count < count)
+            {
+                ilist.Add(Activator.CreateInstance(listType));
+            }
+            for (var i = 0; i < ilist.Count; ++i)
+            {
+                ilist[i] = OnObjectGUI(ilist[i]);
+            }
+            GUILayout.EndVertical();
+        }
+        else if (field.FieldType == typeof(int))
+        {
+            field.SetValue(obj, EditorGUILayout.IntField((int)field.GetValue(obj)));
+        }
+        else if (field.FieldType == typeof(float))
+        {
+            field.SetValue(obj, EditorGUILayout.FloatField((float)field.GetValue(obj)));
+        }
+        else if (field.FieldType == typeof(string))
+        {
+            string refName = null;
+            var attrs = field.GetCustomAttributes(true);
+            foreach (var a in attrs)
+            {
+                var r = a as JsonStoreRefer;
+                if (r != null)
+                    refName = r.Name;
+            }
+            
+            var available = refName != null && _refers[refName].Contains((string)field.GetValue(obj));
+            GUI.contentColor = available ? Color.green : Color.red;
+            if (refName == null)
+                GUI.contentColor = Color.white;
+
+            var val = EditorGUILayout.TextField((string)field.GetValue(obj));
+            if (val == null)
+                val = "";
+            field.SetValue(obj, val);
+            GUI.contentColor = Color.white;
+
+            if (refName != null)
+            {
+                var refs = _refers[refName].ToArray();
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                _useRefs = GUILayout.Toggle(_useRefs, string.Format("({0})", refName), labelWidth);
+                GUILayout.BeginVertical();
+                if (_useRefs)
+                {
+                    GUI.contentColor = Color.cyan;
+                    var refLen = refs.Length;
+                    for (var refIdx = 0; refIdx < refLen; ++refIdx)
+                    {
+                        var r = refs[refIdx];
+                        if (r.IndexOf(val) >= 0)
+                            GUILayout.Label(string.Format("{0}{1}", r, _refNames[refName][refIdx]));
+                    }
+                    GUI.contentColor = Color.white;
+                }
+                GUILayout.EndVertical();
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+            }
+        }
+        else if (field.FieldType.IsEnum)
+        {
+            var v = (System.Enum)field.GetValue(obj);
+            v = EditorGUILayout.EnumPopup(v);
+            field.SetValue(obj, v);
+        }
+        else if (field.FieldType.IsClass)
+        {
+            var value = field.GetValue(obj);
+            if (value == null)
+                value = JsonConverter.ToObject(field.FieldType, "{}");
+            GUILayout.BeginVertical();
+            OnObjectGUI(value);
+            GUILayout.EndVertical();
+            field.SetValue(obj, value);
+        }
     }
 
     private void ChangeKey()

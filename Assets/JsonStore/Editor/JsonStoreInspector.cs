@@ -3,21 +3,24 @@ using UnityEditor;
 using System.Collections;
 using System.IO;
 
-[CustomEditor(typeof(JsonStoreEditor))]
+[CustomEditor(typeof(JsonStoreAsset))]
 public class JsonStoreInspector : Editor
 {
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
 
-        JsonStoreEditor store = target as JsonStoreEditor;
-        foreach (TextAsset asset in store.assets)
+        var asset = target as JsonStoreAsset;
+        if (asset.list == null)
+            return;
+
+        foreach (var i in asset.list)
         {
-            if (GUILayout.Button(asset.name))
+            if (GUILayout.Button(i.name))
             {
-                JsonStoreWindow win = EditorWindow.GetWindow<JsonStoreWindow>(asset.name);
-                win.title = asset.name;
-                win.Load(asset);
+                JsonStoreWindow.target = i;
+                JsonStoreWindow.list = asset.list;
+                EditorWindow.GetWindow<JsonStoreWindow>("Json Store");
             }
         }
     }

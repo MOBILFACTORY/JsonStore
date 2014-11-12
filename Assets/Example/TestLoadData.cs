@@ -4,14 +4,16 @@ using System.Collections.Generic;
 
 public class TestLoadData : MonoBehaviour
 {
-    public JsonStore<TestObject> testObject = new JsonStore<TestObject>();
+    public JsonStore<NewObject> store = new JsonStore<NewObject>();
 
     private void Start()
     {
-        testObject.Load(Resources.Load<TextAsset>("TestObject"));
+        store.Load(Resources.Load<TextAsset>("NewObject"));
 
-        Debug.Log("Count: " + testObject.Count.ToString());
-        var t = testObject["1"];
-        Debug.Log(t.attackDamage);
+        Debug.Log(string.Format("Count: {0}", store.Count));
+        foreach (var i in store)
+        {
+            Debug.Log(i.ToString());
+        }
     }
 }

@@ -1,56 +1,42 @@
 ﻿using UnityEngine;
 using SolJSON.Convert;
-using SolJSON.Convert.Helper;
 using SolJSON.Types;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 
-public class JsonStore<T> : Dictionary<string, T> where T : ScriptableObject
+public class JsonStore<T> : Dictionary<string, T>
 {
     public void Load(TextAsset json)
     {
-        var t = ScriptableObject.CreateInstance(typeof(T));
         Load(json.name, json.text);
     }
 
     public void Load(string objName, string jsonStr)
     {
-        var jsonDict = SolJSON.Convert.JsonConverter.ToJsonObject(jsonStr).AsDictonary;
+        var jsonDict = JsonConverter.ToJsonObject(jsonStr).AsDictonary;
         foreach (var pair in jsonDict)
         {
-            var o = (T)JsonStore.ToScriptableObject(objName, pair.Value.AsDictonary);
+            var o = JsonConverter.ToObject<T>(pair.Value);
             this.Add(pair.Key, o);
         }
     }
 }
 
-public class JsonStore
+[AttributeUsage(AttributeTargets.Field)]
+public class JsonStoreRefer : Attribute
 {
-    public static ScriptableObject ToScriptableObject(string name, JsonDictonary dict)
+    public string _name;
+
+    public JsonStoreRefer(string name)
     {
-        ScriptableObject obj = ScriptableObject.CreateInstance(name);
-        Type type = obj.GetType();
-        foreach (var pair in dict)
-        {
-            FieldInfo f = type.GetField(pair.Key);
-            if (f == null)
-                continue;
-            
-            f.SetValue(obj, JsonObjectToObject.Convert(f.FieldType, pair.Value));
-        }
-        return obj;
+        _name = name;
     }
-    
-    public static JsonObject ToJsonObject(ScriptableObject obj)
+
+    public string Name
     {
-        Type type = obj.GetType();
-        JsonDictonary dict = new JsonDictonary();
-        foreach (var f in type.GetFields())
+        get
         {
-            dict.Add(f.Name, ObjectToJsonObject.Convert(f.GetValue(obj)));
+            return _name;
         }
-        return dict;
     }
 }
