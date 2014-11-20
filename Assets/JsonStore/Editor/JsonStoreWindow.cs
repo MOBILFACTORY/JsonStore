@@ -478,8 +478,6 @@ public class JsonStoreWindow : EditorWindow
 
         GUILayout.EndHorizontal();
 
-        GUILayout.Space(10);
-
         _itemScrollPos = EditorGUILayout.BeginScrollView(_itemScrollPos, GUILayout.Width (position.width - ListWidth), GUILayout.Height(position.height - 70));
 
         if (_data.Contains(_selectedKey) && _data[_selectedKey].AsDictonary != null)
@@ -503,8 +501,6 @@ public class JsonStoreWindow : EditorWindow
                         _data[dataKey].AsDictonary[origPair.Key] = newDict[origPair.Key];
                     }
                 }
-
-                //_data[dataKey].AsDictonary[changedKey] = changedValue;
             }
         }
 
@@ -513,6 +509,11 @@ public class JsonStoreWindow : EditorWindow
     }
 
     private object OnObjectGUI(object obj)
+    {
+        return OnObjectGUI(obj, null);
+    }
+
+    private object OnObjectGUI(object obj, string refName)
     {
         if (obj == null)
             return null;
@@ -529,7 +530,41 @@ public class JsonStoreWindow : EditorWindow
         }
         else if (type == typeof(string))
         {
-            obj = EditorGUILayout.TextField((string)obj);
+//            obj = EditorGUILayout.TextField((string)obj);
+            var available = refName != null && _refers[refName].Contains((string)obj);
+            GUI.contentColor = available ? Color.green : Color.red;
+            if (refName == null)
+                GUI.contentColor = Color.white;
+            
+            var val = EditorGUILayout.TextField((string)obj);
+            if (val == null)
+                val = "";
+            obj = val;
+            GUI.contentColor = Color.white;
+            if (refName != null)
+            {
+                var refs = _refers[refName].ToArray();
+                _useRefs = GUILayout.Toggle(_useRefs, string.Format("({0})", refName));
+                GUILayout.BeginVertical();
+                if (_useRefs)
+                {
+                    GUI.contentColor = Color.cyan;
+                    var refLen = refs.Length;
+                    for (var refIdx = 0; refIdx < refLen; ++refIdx)
+                    {
+                        var r = refs[refIdx];
+                        if (r.IndexOf(val) >= 0)
+                            GUILayout.Label(string.Format("{0}{1}", r, _refNames[refName][refIdx]));
+                    }
+                    GUI.contentColor = Color.white;
+                }
+                GUILayout.EndVertical();
+            }
+
+        }
+        else if (type == typeof(bool))
+        {
+            obj = EditorGUILayout.Toggle((bool)obj);
         }
         else
         {
@@ -558,13 +593,32 @@ public class JsonStoreWindow : EditorWindow
             GUILayout.BeginVertical();
             var count = EditorGUILayout.IntField("size", ilist.Count);
             Type listType = ilist.GetType().GetGenericArguments()[0];
+
+            string refName = null;
+            var attrs = field.GetCustomAttributes(true);
+            foreach (var a in attrs)
+            {
+                var r = a as JsonStoreRefer;
+                if (r != null)
+                    refName = r.Name;
+            }
+
             while (ilist.Count < count)
             {
-                ilist.Add(Activator.CreateInstance(listType));
+                if (listType == typeof(string))
+                {
+                    ilist.Add("");
+                }
+                else
+                    ilist.Add(Activator.CreateInstance(listType));
+            }
+            while (ilist.Count > count)
+            {
+                ilist.RemoveAt(ilist.Count - 1);
             }
             for (var i = 0; i < ilist.Count; ++i)
             {
-                ilist[i] = OnObjectGUI(ilist[i]);
+                ilist[i] = OnObjectGUI(ilist[i], refName);
             }
             GUILayout.EndVertical();
         }
@@ -621,6 +675,12 @@ public class JsonStoreWindow : EditorWindow
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
             }
+        }
+        else if (field.FieldType == typeof(bool))
+        {
+            var val = (bool)field.GetValue(obj);
+            val = EditorGUILayout.Toggle(val);
+            field.SetValue(obj, val);
         }
         else if (field.FieldType.IsEnum)
         {
