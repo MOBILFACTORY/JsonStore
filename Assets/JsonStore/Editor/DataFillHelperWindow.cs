@@ -235,7 +235,7 @@ public class DataFillHelper : EditorWindow
             origKeys.Add(pair.Key);
         }
 
-        var newDict = new JsonDictonary();
+        var newDict = new Dictionary<string, JsonObject>();
         var valArr = text.Split('\n');
         var valIdx = 0;
         bool begin = false;
@@ -260,9 +260,15 @@ public class DataFillHelper : EditorWindow
         {
             jsonDict.Remove(key);
         }
+        var newKeys = new List<string>();
         foreach (var pair in newDict)
         {
-            jsonDict.Add(pair.Key, pair.Value);
+            newKeys.Add(pair.Key);
+        }
+        newKeys.Reverse();
+        foreach (var key in newKeys)
+        {
+            jsonDict.Add(key, newDict[key]);
         }
     }
 
