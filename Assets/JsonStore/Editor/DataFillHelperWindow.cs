@@ -108,9 +108,9 @@ public class DataFillHelper : EditorWindow
         if (obj == null)
             return;
 
-        foreach (var f in obj.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance))
+        foreach (var property in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
         {
-            var type = f.FieldType;
+            var type = property.PropertyType;
 
             if (type == typeof(int)
                 || type == typeof(long)
@@ -119,11 +119,11 @@ public class DataFillHelper : EditorWindow
                 || type == typeof(bool)
                 || type == typeof(string))
             {
-                if (f.Name == selectedFieldName)
+                if (property.Name == selectedFieldName)
                     GUI.contentColor = Color.green;
-                if (GUILayout.Button(f.Name))
+                if (GUILayout.Button(property.Name))
                 {
-                    selectedFieldName = f.Name;
+                    selectedFieldName = property.Name;
                     selectedPropName = "";
                 }
                 GUI.contentColor = Color.white;
@@ -131,42 +131,42 @@ public class DataFillHelper : EditorWindow
             else if (typeof(IList).IsAssignableFrom(type) == true)
             {
                 GUILayout.Space(10);
-                if (f.Name == selectedFieldName)
+                if (property.Name == selectedFieldName)
                     GUI.contentColor = Color.green;
-                GUILayout.Label(string.Format("{0} (Collection)", f.Name));
+                GUILayout.Label(string.Format("{0} (Collection)", property.Name));
                 GUI.contentColor = Color.white;
-                var t = f.FieldType.GetGenericArguments()[0];
+                var t = property.PropertyType.GetGenericArguments()[0];
                 var o = Activator.CreateInstance(t);
-                DrawProps(o, f.Name, true);
+                DrawProps(o, property.Name, true);
             }
             else if (typeof(IDictionary).IsAssignableFrom(type) == true)
             {
                 GUILayout.Space(10);
-                if (f.Name == selectedFieldName)
+                if (property.Name == selectedFieldName)
                     GUI.contentColor = Color.green;
-                GUILayout.Label(string.Format("{0} (Collection)", f.Name));
+                GUILayout.Label(string.Format("{0} (Collection)", property.Name));
                 GUI.contentColor = Color.white;
-                var t = f.FieldType.GetGenericArguments()[1];
+                var t = property.PropertyType.GetGenericArguments()[1];
                 var o = Activator.CreateInstance(t);
-                DrawProps(o, f.Name, true);
+                DrawProps(o, property.Name, true);
             }
             else if (type.IsClass == true)
             {
                 GUILayout.Space(10);
-                if (f.Name == selectedFieldName)
+                if (property.Name == selectedFieldName)
                     GUI.contentColor = Color.green;
-                GUILayout.Label(f.Name);
+                GUILayout.Label(property.Name);
                 GUI.contentColor = Color.white;
-                var o = Activator.CreateInstance(f.FieldType);
-                DrawProps(o, f.Name, false);
+                var o = Activator.CreateInstance(property.PropertyType);
+                DrawProps(o, property.Name, false);
             }
             else if (type.IsEnum == true)
             {
-                if (f.Name == selectedFieldName)
+                if (property.Name == selectedFieldName)
                     GUI.contentColor = Color.green;
-                if (GUILayout.Button(f.Name))
+                if (GUILayout.Button(property.Name))
                 {
-                    selectedFieldName = f.Name;
+                    selectedFieldName = property.Name;
                     selectedPropName = "";
                 }
                 GUI.contentColor = Color.white;

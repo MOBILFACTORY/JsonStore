@@ -572,34 +572,34 @@ public class JsonStoreWindow : EditorWindow
         }
         else
         {
-            var fields = type.GetFields();
-            foreach (var field in fields)
+            var properties = type.GetProperties();
+            foreach (var property in properties)
             {
                 GUILayout.BeginHorizontal();
-                OnFieldGUI(obj, field);
+                OnFieldGUI(obj, property);
                 GUILayout.EndHorizontal();
             }
         }
         return obj;
     }
 
-    private void OnFieldGUI(object obj, FieldInfo field)
+    private void OnFieldGUI(object obj, PropertyInfo property)
     {
         var labelWidth = GUILayout.Width(100);
-        GUILayout.Label(field.Name, labelWidth);
-        if (typeof(IList).IsAssignableFrom(field.FieldType))
+        GUILayout.Label(property.Name, labelWidth);
+        if (typeof(IList).IsAssignableFrom(property.PropertyType))
         {
-            IList ilist = (IList)field.GetValue(obj);
+            IList ilist = (IList)property.GetValue(obj, null);
             if (ilist == null)
-                ilist = (IList)Activator.CreateInstance(field.FieldType);
-            field.SetValue(obj, ilist);
+                ilist = (IList)Activator.CreateInstance(property.PropertyType);
+            property.SetValue(obj, ilist, null);
             
             GUILayout.BeginVertical();
             var count = EditorGUILayout.IntField("size", ilist.Count);
             Type listType = ilist.GetType().GetGenericArguments()[0];
 
             string refName = null;
-            var attrs = field.GetCustomAttributes(true);
+            var attrs = property.GetCustomAttributes(true);
             foreach (var a in attrs)
             {
                 var r = a as JsonStoreRefer;
@@ -626,34 +626,34 @@ public class JsonStoreWindow : EditorWindow
             }
             GUILayout.EndVertical();
         }
-        else if (field.FieldType == typeof(int))
+        else if (property.PropertyType == typeof(int))
         {
-            field.SetValue(obj, EditorGUILayout.IntField((int)field.GetValue(obj)));
+            property.SetValue(obj, EditorGUILayout.IntField((int)property.GetValue(obj, null)), null);
         }
-        else if (field.FieldType == typeof(float))
+        else if (property.PropertyType == typeof(float))
         {
-            field.SetValue(obj, EditorGUILayout.FloatField((float)field.GetValue(obj)));
+            property.SetValue(obj, EditorGUILayout.FloatField((float)property.GetValue(obj, null)), null);
         }
-        else if (field.FieldType == typeof(string))
+        else if (property.PropertyType == typeof(string))
         {
             string refName = null;
-            var attrs = field.GetCustomAttributes(true);
+            var attrs = property.GetCustomAttributes(true);
             foreach (var a in attrs)
             {
                 var r = a as JsonStoreRefer;
                 if (r != null)
                     refName = r.Name;
             }
-            
-            var available = refName != null && _refers[refName].Contains((string)field.GetValue(obj));
+
+            var available = refName != null && _refers[refName].Contains((string)property.GetValue(obj, null));
             GUI.contentColor = available ? Color.green : Color.red;
             if (refName == null)
                 GUI.contentColor = Color.white;
 
-            var val = EditorGUILayout.TextField((string)field.GetValue(obj));
+            var val = EditorGUILayout.TextField((string)property.GetValue(obj, null));
             if (val == null)
                 val = "";
-            field.SetValue(obj, val);
+            property.SetValue(obj, val, null);
             GUI.contentColor = Color.white;
 
             if (refName != null)
@@ -680,27 +680,27 @@ public class JsonStoreWindow : EditorWindow
                 GUILayout.BeginHorizontal();
             }
         }
-        else if (field.FieldType == typeof(bool))
+        else if (property.PropertyType == typeof(bool))
         {
-            var val = (bool)field.GetValue(obj);
+            var val = (bool)property.GetValue(obj, null);
             val = EditorGUILayout.Toggle(val);
-            field.SetValue(obj, val);
+            property.SetValue(obj, val, null);
         }
-        else if (field.FieldType.IsEnum)
+        else if (property.PropertyType.IsEnum)
         {
-            var v = (System.Enum)field.GetValue(obj);
+            var v = (System.Enum)property.GetValue(obj, null);
             v = EditorGUILayout.EnumPopup(v);
-            field.SetValue(obj, v);
+            property.SetValue(obj, v, null);
         }
-        else if (field.FieldType.IsClass)
+        else if (property.PropertyType.IsClass)
         {
-            var value = field.GetValue(obj);
+            var value = property.GetValue(obj, null);
             if (value == null)
-                value = JsonConverter.ToObject(field.FieldType, "{}");
+                value = JsonConverter.ToObject(property.PropertyType, "{}");
             GUILayout.BeginVertical();
             OnObjectGUI(value);
             GUILayout.EndVertical();
-            field.SetValue(obj, value);
+            property.SetValue(obj, value, null);
         }
     }
 
