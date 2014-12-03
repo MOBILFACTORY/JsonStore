@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.IO;
+using System.Linq;
 
 public class DataFillHelper : EditorWindow
 {
@@ -82,8 +83,10 @@ public class DataFillHelper : EditorWindow
         
         GUILayout.BeginVertical(GUILayout.Width(140));
 
-        var origType = Activator.CreateInstance("Assembly-CSharp", asset.name).Unwrap().GetType();
-        var obj = JsonConverter.ToObject(origType, "{}");
+        var assembly = Assembly.Load("Assembly-CSharp");
+        var t = assembly.GetTypes().Where(x => x.Name.Equals(asset.name)).First();
+
+        var obj = JsonConverter.ToObject(t, "{}");
 
         if (KeyStr == selectedFieldName)
             GUI.contentColor = Color.green;
@@ -296,8 +299,9 @@ public class DataFillHelper : EditorWindow
             if (valArr.Length == valIdx || valArr[valIdx] == "")
                 break;
 
-            
-            var origType = Activator.CreateInstance("Assembly-CSharp", asset.name).Unwrap().GetType();
+            var assembly = Assembly.Load("Assembly-CSharp");
+            var origType = assembly.GetTypes().Where(x => x.Name.Equals(asset.name)).First();
+
             var obj = JsonConverter.ToObject(origType, "{}");
             var field = obj.GetType().GetField(selectedFieldName);
             JsonObject jsonObj = new JsonString(valArr[valIdx], true);

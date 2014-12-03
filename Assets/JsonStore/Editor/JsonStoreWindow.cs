@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.IO;
+using System.Linq;
 
 public class JsonStoreWindow : EditorWindow
 {
@@ -483,7 +484,10 @@ public class JsonStoreWindow : EditorWindow
         if (_data.Contains(_selectedKey) && _data[_selectedKey].AsDictonary != null)
         {
             var origDict = _data[_selectedKey].AsDictonary;
-            var origType = Activator.CreateInstance("Assembly-CSharp", target.name).Unwrap().GetType();
+
+            var assembly = Assembly.Load("Assembly-CSharp");
+            var origType = assembly.GetTypes().Where(x => x.Name.Equals(target.name)).First();
+
             var origObj = JsonConverter.ToObject(origType, origDict.ToString());
 
             OnObjectGUI(origObj);
