@@ -98,12 +98,12 @@ public class DataFillHelper : EditorWindow
         GUI.contentColor = Color.white;
         GUILayout.Space(10);
 
-        DrawFields(obj);
+        DrawProperties(obj);
         
         GUILayout.EndVertical();
     }
 
-    private void DrawFields(object obj)
+    private void DrawProperties(object obj)
     {
         if (obj == null)
             return;
@@ -303,40 +303,40 @@ public class DataFillHelper : EditorWindow
             var origType = assembly.GetTypes().Where(x => x.Name.Equals(asset.name)).First();
 
             var obj = JsonConverter.ToObject(origType, "{}");
-            var field = obj.GetType().GetField(selectedFieldName);
+            var property = obj.GetType().GetProperty(selectedFieldName);
             JsonObject jsonObj = new JsonString(valArr[valIdx], true);
-            if (field.FieldType == typeof(int))
+            if (property.PropertyType == typeof(int))
             {
                 jsonObj = new JsonNumber(int.Parse(valArr[valIdx]));
             }
-            else if (field.FieldType == typeof(long))
+            else if (property.PropertyType == typeof(long))
             {
                 jsonObj = new JsonNumber(long.Parse(valArr[valIdx]));
             }
-            else if (field.FieldType == typeof(float))
+            else if (property.PropertyType == typeof(float))
             {
                 jsonObj = new JsonNumber(float.Parse(valArr[valIdx]));
             }
-            else if (field.FieldType == typeof(double))
+            else if (property.PropertyType == typeof(double))
             {
                 jsonObj = new JsonNumber(double.Parse(valArr[valIdx]));
             }
-            else if (field.FieldType == typeof(bool))
+            else if (property.PropertyType == typeof(bool))
             {
                 jsonObj = new JsonBool(bool.Parse(valArr[valIdx]));
             }
-            else if (field.FieldType == typeof(string))
+            else if (property.PropertyType == typeof(string))
             {
                 jsonObj = new JsonString(valArr[valIdx], false);
             }
-            else if (field.FieldType.IsClass)
+            else if (property.PropertyType.IsClass)
             {
-                var o = JsonConverter.ToObject(field.FieldType, jsonDict[key].AsDictonary[selectedFieldName].ToString());
+                var o = JsonConverter.ToObject(property.PropertyType, jsonDict[key].AsDictonary[selectedFieldName].ToString());
                 var p = o.GetType().GetProperty(selectedPropName);
                 p.SetValue(o, Convert.ChangeType((object)valArr[valIdx], p.PropertyType), null);
                 jsonObj = JsonConverter.ToJsonObject(o);
             }
-            else if (field.FieldType.IsEnum)
+            else if (property.PropertyType.IsEnum)
             {
                 jsonObj = new JsonNumber(int.Parse(valArr[valIdx]));
             }

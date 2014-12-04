@@ -18,9 +18,13 @@ public class JsonStoreInspector : Editor
         {
             if (GUILayout.Button(i.name))
             {
+                if (null != JsonStoreWindow.target)
+                    EditorWindow.GetWindow<JsonStoreWindow>().Close();
+
                 JsonStoreWindow.target = i;
                 JsonStoreWindow.list = asset.list;
-                EditorWindow.GetWindow<JsonStoreWindow>("Json Store");
+
+                EditorWindow.GetWindow<JsonStoreWindow>(i.name);
             }
         }
     }

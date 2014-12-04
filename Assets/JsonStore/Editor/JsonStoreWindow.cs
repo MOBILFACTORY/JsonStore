@@ -92,9 +92,9 @@ public class JsonStoreWindow : EditorWindow
                 _refers[i.name].Add(j.Key);
 
                 if (j.Value.AsDictonary != null
-                    && j.Value.AsDictonary.Contains("name"))
+                    && j.Value.AsDictonary.Contains("Name"))
                 {
-                    var name = j.Value.AsDictonary["name"].AsString.Value;
+                    var name = j.Value.AsDictonary["Name"].AsString.Value;
                     _refNames[i.name].Add(string.Format("({0})", name));
                 }
                 else
@@ -359,9 +359,9 @@ public class JsonStoreWindow : EditorWindow
                     continue;
             }
             
-            if (pair.Value.AsDictonary != null && pair.Value.AsDictonary.Contains("name"))
+            if (pair.Value.AsDictonary != null && pair.Value.AsDictonary.Contains("Name"))
             {
-                var namestr = pair.Value.AsDictonary["name"].ToString();
+                var namestr = pair.Value.AsDictonary["Name"].ToString();
                 namestr = namestr.Replace("\"", "");
                 namestr = namestr.Replace("\\r", "");
                 nameList.Add(string.Format("{0} ({1})", pair.Key, namestr));

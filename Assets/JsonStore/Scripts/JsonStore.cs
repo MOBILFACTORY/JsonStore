@@ -16,16 +16,16 @@ public class JsonStore<T> : Dictionary<string, T>
     }
 }
 
-[AttributeUsage(AttributeTargets.Field)]
+[AttributeUsage(AttributeTargets.Property)]
 public class JsonStoreRefer : Attribute
 {
     public string _name;
-    
+
     public JsonStoreRefer(string name)
     {
         _name = name;
     }
-    
+
     public string Name
     {
         get
