@@ -162,7 +162,7 @@ public class JsonStoreWindow : EditorWindow
         GUI.FocusControl("");
         
         string assetpath = AssetDatabase.GetAssetPath(target);
-        string jsonstr = _data.ToString(4);
+        string jsonstr = _data.ToString(4).Replace("\r", "");
         StreamWriter file = new StreamWriter(assetpath);
         file.Write(jsonstr);
         file.Close();
@@ -570,20 +570,24 @@ public class JsonStoreWindow : EditorWindow
         {
             obj = EditorGUILayout.Toggle((bool)obj);
         }
+        else if (type.IsEnum)
+        {
+            obj = EditorGUILayout.EnumPopup((Enum)obj);
+        }
         else
         {
             var properties = type.GetProperties();
             foreach (var property in properties)
             {
                 GUILayout.BeginHorizontal();
-                OnFieldGUI(obj, property);
+                OnPropertyGUI(obj, property);
                 GUILayout.EndHorizontal();
             }
         }
         return obj;
     }
 
-    private void OnFieldGUI(object obj, PropertyInfo property)
+    private void OnPropertyGUI(object obj, PropertyInfo property)
     {
         var labelWidth = GUILayout.Width(100);
         GUILayout.Label(property.Name, labelWidth);
